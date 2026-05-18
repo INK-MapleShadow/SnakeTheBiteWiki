@@ -5,14 +5,15 @@ WORKDIR /app
 # 安装系统依赖
 RUN apk add --no-cache openssl
 
-# 安装 pnpm 并设置国内镜像（加速下载）
+# 安装 pnpm 并设置国内镜像
 RUN npm install -g pnpm && pnpm config set registry https://registry.npmmirror.com
 
 # 先复制依赖文件（利用 Docker 缓存层）
 COPY package*.json ./
 COPY prisma ./prisma/
 
-RUN pnpm install
+# 限制并发，减少内存占用
+RUN pnpm install --prefer-offline --no-store && pnpm store prune
 
 # 复制全部代码
 COPY . .
